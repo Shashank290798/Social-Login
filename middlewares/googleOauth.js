@@ -1,5 +1,6 @@
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const passport = require('passport')
+const axios = require('axios')
 const dotenv = require("dotenv")
 dotenv.config({ path: "./config.env" });
 
@@ -26,4 +27,29 @@ passport.use(new GoogleStrategy(config, async (request, accessToken, refreshToke
     request.session.refreshToken = refreshToken;
     return done(null, accessToken, refreshToken, profile);
 }));
+
+
+const refreshTokenMiddleware = async (req, res, next) => {
+    if (req.session && req.session.refreshToken) {
+        // Perform token refreshing here
+        try {
+            const response = await axios.post("https://oauth2.googleapis.com/token", {
+                refresh_token: req.session.refreshToken,
+                client_id: process.env.GOOGLE_CLIENT_ID,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                grant_type: 'refresh_token'
+            });
+            // Update the session with new tokens
+            req.session.accessToken = response.data.access_token;
+            req.session.refreshToken = response.data.refresh_token;
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+    next();
+};
+
+module.exports = {
+    refreshTokenMiddleware
+};
 
