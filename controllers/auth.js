@@ -114,7 +114,7 @@ exports.auth = catchAsync(async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // Create a new user record in the database
-        user = await User.create({ email, password: hashedPassword, source: 'google' });
+        user = await User.create({ email, password: hashedPassword });
 
         // Return a 201 Created response if user creation is successful
         statusCode = 201
